@@ -1,5 +1,5 @@
 ---
-title: "Covid19 Drug Discovery Explorer"
+title: "Covid-19 Drug Discovery Explorer"
 author: "O'Donovan et al"
 date: "10/4/2020"
 output: html_document
@@ -7,11 +7,15 @@ runtime: shiny
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE,
+                      warning = FALSE,
+                      error = FALSE,
+                      message = FALSE)
 library(dplyr)
 library(readr)
 library(ggplot2)
 library(stringr)
+library(shiny)
 
 dataset <- read_csv("https://raw.githubusercontent.com/AliSajid/Covid19/v1.6/results/sars2-summarized-dataset.csv") %>% 
   select(compound, avg, sdev)
@@ -19,34 +23,28 @@ dataset <- read_csv("https://raw.githubusercontent.com/AliSajid/Covid19/v1.6/res
 
 ## Introduction
 
-This document aims to help us narrow down the results that we would like to be interested in. The document sources the data from a list we have generated that is available at [this github link](https://raw.githubusercontent.com/AliSajid/Covid19/master/results/sars2-summarized-dataset.csv).
+This document is a companion document to the COVID-19 Drug Discovery paper by O'Donovan et al published in *journal*. The paper can be found [*here*](). This interactive document aims to visualize the dataset from our final list of candidate drugs. This version of the document utilizes the v1.6 of our [analysis repository](https://github.com/AliSajid/Covid19/tree/v1.6) (latest version available [here](https://github.com/AliSajid/Covid19)). The document sources the data from a list we have generated that is available at [this github link]("https://raw.githubusercontent.com/AliSajid/Covid19/v1.6/results/sars2-summarized-dataset.csv") as a Comma Separated Values (CSV) file.
 
-The above mentioned list summarizes the results of our analysis in a concise way. The list has 5 columns which are as follows:
+## Summary
 
-1. **compound**: The drug that we have extracted from iLINCS
-2. **avg**: The mean concordance score averaged across our 8 cell line datasets
-3. **sdev**: The standard deviation of the score across our 8 cell line datasets
-4. **slog10**: The negative log base 10 of the standard deviation
-5. **slog2**: The negative log base 2 of the standard deviation
+To summarize, in the paper we use a two-pronged transcriptomic approach to identify potential treatments for COVID-19, caused by SARS-CoV-2. We identified the drugs currently being used for treating or undergoing trial for COVID 19 and grouped them according to their mechanism of actions and [ATC Classification](https://www.whocc.no/atc_ddd_index/). We then downloaded the drugs' transcriptomic signatures and averaged them to generate a *group* signature. We also took the results from the transcriptomic datasets from the Mt. Sinai SARS-CoV-2 study to generate a signature for COVID-19. We then utilized the [iLINCS Portal](http://ilincs.org/ilincs/) to identify the drug signatures that were both concordant with our group signatures and discordant with the SARS-CoV-2 signature. This ultimately led us to identify `r nrow(dataset)` drugs that had a high potential for use.
 
-## Exploration
+For the drug signatures, we identified 8 combinations of cell lines, times and concentrations that gave us the maximum yield of drugs. The final result was a signature similarity (or concordance) score for our drugs. To identify our best candidates, we calculated both the mean and the standard deviation across the 8 cell line combinations and picked the ones with a concordance value of $\geq0.5$ and a standard deviation of $\leq 0.06$ to maximise the answer and minimise the disagreement.
 
-The following section allows us to filter and visualize the data. 
+## Analysis
 
-The Threshold slider allows us to filter out the things that have a concordance score less than or equal to the value selected.
+This analysis is split into two parts. The [Visualization](#visualization) allows you to see the distribution of the drugs in  a scatter plot. The [Tabulation](#tabulation) part allows you to see the drugs and their associated values.
 
-The Std Deviation slider allows us to filter out the things that have a standard deviation more than the selected value.
+Both parts are controlled by the control panel at the top. In the control panel, you can set the the minimum mean value and the maximum standard deviation value. It also allows you to filter out drugs that appear to be experimental. Another control lets you decide if the drugs that were filtered out should still be plotted.
 
-The FDA Approved filter allows us to filter out (crudely) putative FDA-unapproved-drugs. This filter leans towards allowing rather than excludding so as to not exclude an approved drug.
-
-```{r eruptions, echo=FALSE}
+```{r control_panel}
 inputPanel(
-  sliderInput("thresh", label = "Pass Threshold: ",
+  sliderInput("thresh", label = "Minimum Value for Mean: ",
               min = 0.3, max = 0.8, value = 0.4, step = 0.01),
-  sliderInput("sdev", label = "Pass Std Deviation: ",
+  sliderInput("sdev", label = "Maximum Value for Std. Deviation: ",
               min = 0, max = 0.15, value = 0.15, step = 0.01),
-  checkboxInput("approved", "FDA Approved Only?", TRUE),
-  checkboxInput("keep", "Keep Filtered Drugs?", FALSE)
+  checkboxInput("approved", "Filter Drugs?", TRUE),
+  checkboxInput("keep", "Plot Filtered Drugs?", FALSE)
 )
 
 filtered_data <- reactive({
@@ -78,14 +76,29 @@ filtered_data <- reactive({
   }
 })
 
+```
+
+
+### Visualization {#visualization}
+
+The following figure allows us to visualize the dataset. The x-axis has the mean concordance value and the y-axis has the standard deviation of the same. Other controls were desribed above.
+
+The Threshold slider allows us to filter out the things that have a concordance score less than or equal to the value selected.
+
+The Std Deviation slider allows us to filter out the things that have a standard deviation more than the selected value.
+
+The FDA Approved filter allows us to filter out (crudely) putative FDA-unapproved-drugs. This filter leans towards allowing rather than excludding so as to not exclude an approved drug.
+
+```{r visualization}
+
 renderText({
   if (input$approved) {
-      glue(
-        "With minimum concordance {input$thresh} and maximum deviation {input$sdev}, we have {nrow(filtered_data() %>% filter(keep == TRUE))} (presumptive) FDA Approved drugs in our list."
+      str_glue(
+        "With minimum concordance {input$thresh} and maximum deviation {input$sdev}, we have {nrow(filtered_data() %>% filter(keep == TRUE))} filtered drugs in our list."
     )
   } else {
-      glue(
-        "With minimum concordance {input$thresh} and maximum deviation {input$sdev}, we have {nrow(filtered_data() %>% filter(keep == TRUE))} drugs (including non-FDA-Approved) in our list."
+      str_glue(
+        "With minimum concordance {input$thresh} and maximum deviation {input$sdev}, we have {nrow(filtered_data() %>% filter(keep == TRUE))} drugs in our list."
       )
   }
 })
@@ -95,17 +108,52 @@ renderPlot({
   
   g <- ggplot(data = filtered_data(), mapping = aes(x = avg, y = sdev, color = keep))
   
-  g + geom_point() + xlab("Average Concordance") + ylab("Standard Deviation") +
-    scale_x_continuous(breaks = seq(0.3, 0.8, 0.025), limits = c(0.3, 0.8)) +
-    scale_y_continuous(breaks = seq(0, 0.15, 0.01), limits = c(0, 0.15)) +
+  
+  label = str_glue("Minimum Mean: {input$thresh}\nMaximum SD: {input$sdev}\nDrugs Identified: {nrow(filtered_data() %>% filter(keep == TRUE))}")
+
+  
+  g + geom_point() + xlab("Mean Concordance") + ylab("Standard Deviation") +
+    scale_x_continuous(breaks = seq(0.3, 0.8, 0.025), limits = c(0.4, 0.625)) +
+    scale_y_reverse(breaks = seq(0, 0.15, 0.01), limits = c(0.10, 0)) +
     scale_color_manual(breaks = c(TRUE, FALSE), values = c("darkgreen", "lightgrey")) +
     guides(color = "none") +
-    theme_minimal()
-})
-
-
-renderDataTable({
-  filtered_data() %>% filter(keep == TRUE) %>% select(-keep)
+    theme_minimal() +
+    ggtitle("Concordance Plot of Identified Drugs") +
+    theme(
+    plot.title = element_text(size = 20, hjust = 0.5, face = "bold"),
+    axis.title = element_text(size = 20, face = "bold"),
+    axis.text = element_text(size = 16, face = "bold")
+    ) +
+    annotate("label", x = 0.6125, y = 0.01, label = label)
 })
 
 ```
+
+### Tabulation {#tabulation}
+
+The following interactive table allows us to sift through the entire list along with the numerical values. The table uses the same filtering criteria as the scatterplot above. For ease of interpretation, the values have been rounded to 4 significant figures.
+
+The columns of the table signify the following:
+
+1. **Name**: The name of thedrug that we have identified
+2. **Mean Concordance**: The mean concordance score averaged across all 8 cell line datasets
+3. **Std. Deviation**: The standard deviation of the score across our 8 cell line datasets
+
+```{r tabulation}
+
+renderDataTable({
+  filtered_data() %>% 
+    filter(keep == TRUE) %>% 
+    select(-keep) %>% 
+    rename(
+      Name = compound,
+      `Mean Concordance` = avg,
+      `Std. Deviation` = sdev
+    ) %>% 
+    mutate(across(where(is.numeric), round, 4))
+})
+
+```
+
+
+
