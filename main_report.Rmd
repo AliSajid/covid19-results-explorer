@@ -1,0 +1,111 @@
+---
+title: "Covid19 Drug Discovery Explorer"
+author: "O'Donovan et al"
+date: "10/4/2020"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(stringr)
+
+dataset <- read_csv("https://raw.githubusercontent.com/AliSajid/Covid19/v1.6/results/sars2-summarized-dataset.csv") %>% 
+  select(compound, avg, sdev)
+```
+
+## Introduction
+
+This document aims to help us narrow down the results that we would like to be interested in. The document sources the data from a list we have generated that is available at [this github link](https://raw.githubusercontent.com/AliSajid/Covid19/master/results/sars2-summarized-dataset.csv).
+
+The above mentioned list summarizes the results of our analysis in a concise way. The list has 5 columns which are as follows:
+
+1. **compound**: The drug that we have extracted from iLINCS
+2. **avg**: The mean concordance score averaged across our 8 cell line datasets
+3. **sdev**: The standard deviation of the score across our 8 cell line datasets
+4. **slog10**: The negative log base 10 of the standard deviation
+5. **slog2**: The negative log base 2 of the standard deviation
+
+## Exploration
+
+The following section allows us to filter and visualize the data. 
+
+The Threshold slider allows us to filter out the things that have a concordance score less than or equal to the value selected.
+
+The Std Deviation slider allows us to filter out the things that have a standard deviation more than the selected value.
+
+The FDA Approved filter allows us to filter out (crudely) putative FDA-unapproved-drugs. This filter leans towards allowing rather than excludding so as to not exclude an approved drug.
+
+```{r eruptions, echo=FALSE}
+inputPanel(
+  sliderInput("thresh", label = "Pass Threshold: ",
+              min = 0.3, max = 0.8, value = 0.4, step = 0.01),
+  sliderInput("sdev", label = "Pass Std Deviation: ",
+              min = 0, max = 0.15, value = 0.15, step = 0.01),
+  checkboxInput("approved", "FDA Approved Only?", TRUE),
+  checkboxInput("keep", "Keep Filtered Drugs?", FALSE)
+)
+
+filtered_data <- reactive({
+  
+  if (input$approved) {
+    fda <- dataset %>% 
+    filter(str_detect(compound, "CHEMBL", negate = T),
+         str_detect(compound, "SCHEMBL", negate = T),
+         str_detect(compound, "^\\d+", negate = T),
+         str_detect(compound, "^[A-Z]\\d*\\w*\\-?\\s?\\d+", negate = T),
+         str_detect(compound, "[Ii]nhibitor", negate = T),
+         str_detect(compound, "^Broad", negate = T),
+         str_detect(compound, "^BRD*", negate = T),
+         str_detect(compound, "^UNII", negate = T),
+         str_detect(compound, "omer", negate = T),
+         str_detect(compound, "^Tyrphostin", negate = T)
+        )
+  } else {
+    fda <- dataset
+  }
+  
+  if (input$keep) {
+    fda %>% 
+      mutate(keep = if_else(avg >= input$thresh & sdev <= input$sdev, TRUE, FALSE))
+  } else {
+  fda  %>% 
+    filter(avg >= input$thresh, sdev <= input$sdev) %>% 
+      mutate(keep = TRUE)
+  }
+})
+
+renderText({
+  if (input$approved) {
+      glue(
+        "With minimum concordance {input$thresh} and maximum deviation {input$sdev}, we have {nrow(filtered_data() %>% filter(keep == TRUE))} (presumptive) FDA Approved drugs in our list."
+    )
+  } else {
+      glue(
+        "With minimum concordance {input$thresh} and maximum deviation {input$sdev}, we have {nrow(filtered_data() %>% filter(keep == TRUE))} drugs (including non-FDA-Approved) in our list."
+      )
+  }
+})
+
+
+renderPlot({
+  
+  g <- ggplot(data = filtered_data(), mapping = aes(x = avg, y = sdev, color = keep))
+  
+  g + geom_point() + xlab("Average Concordance") + ylab("Standard Deviation") +
+    scale_x_continuous(breaks = seq(0.3, 0.8, 0.025), limits = c(0.3, 0.8)) +
+    scale_y_continuous(breaks = seq(0, 0.15, 0.01), limits = c(0, 0.15)) +
+    scale_color_manual(breaks = c(TRUE, FALSE), values = c("darkgreen", "lightgrey")) +
+    guides(color = "none") +
+    theme_minimal()
+})
+
+
+renderDataTable({
+  filtered_data() %>% filter(keep == TRUE) %>% select(-keep)
+})
+
+```
