@@ -1,7 +1,6 @@
 # Covid-19 Drug Discovery Explorer
 
 [![DOI](https://zenodo.org/badge/301042598.svg)](https://zenodo.org/badge/latestdoi/301042598)
-
 [![GitHub issues](https://img.shields.io/github/issues/AliSajid/covid19-results-explorer)](https://github.com/AliSajid/covid19-results-explorer/issues)
 [![GitHub forks](https://img.shields.io/github/forks/AliSajid/covid19-results-explorer)](https://github.com/AliSajid/covid19-results-explorer/network)
 [![GitHub stars](https://img.shields.io/github/stars/AliSajid/covid19-results-explorer)](https://github.com/AliSajid/covid19-results-explorer/stargazers)
