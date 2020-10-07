@@ -1,5 +1,6 @@
 ---
 title: "Covid-19 Drug Discovery Explorer"
+subtitle: "Analysis Version: 1.8"
 author: "O'Donovan et al"
 date: "10/4/2020"
 output: html_document
@@ -23,7 +24,7 @@ dataset <- read_csv("https://raw.githubusercontent.com/AliSajid/Covid19/v1.6/res
 
 ## Introduction
 
-This document is a companion document to the COVID-19 Drug Discovery paper by O'Donovan "“"Identification of new drug treatments to combat COVID19: A signature-based approach using iLINCS" et al published in *journal*. The paper can be found [*here*](). This interactive document aims to visualize the dataset from our final list of candidate drugs. This version of the document utilizes the v1.6 of our [analysis repository](https://github.com/AliSajid/Covid19/tree/v1.6) (latest version available [here](https://github.com/AliSajid/Covid19)). The document sources the data from a list we have generated that is available at [this github link]("https://raw.githubusercontent.com/AliSajid/Covid19/v1.6/results/sars2-summarized-dataset.csv") as a Comma Separated Values (CSV) file.
+This document is a companion document to the COVID-19 Drug Discovery paper by O'Donovan "Identification of new drug treatments to combat COVID19: A signature-based approach using iLINCS" et al published in *journal*. The paper can be found [*here*](). This interactive document aims to visualize the dataset from our final list of candidate drugs. This version of the document utilizes the v1.8 of our [analysis repository](https://github.com/AliSajid/Covid19/tree/v1.8) (latest version available [here](https://github.com/AliSajid/Covid19)). The document sources the data from a list we have generated that is available at [this github link]("https://raw.githubusercontent.com/AliSajid/Covid19/v1.8/results/sars2-summarized-dataset.csv") as a Comma Separated Values (CSV) file.
 
 ## Summary
 
