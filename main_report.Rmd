@@ -17,6 +17,7 @@ library(readr)
 library(ggplot2)
 library(stringr)
 library(shiny)
+library(plotly)
 
 dataset <- read_csv("https://raw.githubusercontent.com/AliSajid/Covid19/v1.6/results/sars2-summarized-dataset.csv") %>% 
   select(compound, avg, sdev)
@@ -119,7 +120,7 @@ renderPlot({
   label = str_glue("Minimum Mean: {input$thresh}\nMaximum SD: {input$sdev}\nDrugs Identified: {nrow(filtered_data() %>% filter(keep == TRUE))}")
 
   
-g + geom_hline(yintercept = input$sdev, color = "grey80", lwd = 2) +
+p <- g + geom_hline(yintercept = input$sdev, color = "grey80", lwd = 2) +
     geom_vline(xintercept = input$thresh, color = "grey80", lwd = 2) +
     geom_point() + 
     xlab("Mean Concordance") + 
@@ -136,6 +137,10 @@ g + geom_hline(yintercept = input$sdev, color = "grey80", lwd = 2) +
     axis.text = element_text(size = 16, face = "bold")
     ) +
     annotate("label", x = 0.6125, y = 0.01, label = label)
+
+z <- ggplotly(p)
+
+z
 
 })
 
