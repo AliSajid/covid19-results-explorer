@@ -146,12 +146,16 @@ p <- g + geom_hline(yintercept = input$sdev, color = "grey80", lwd = 2) +
     ) +
     annotate("label", x = 0.6125, y = 0.01, label = label)
 
-ggplotly(p, tooltip = "text") %>% 
-  layout(showlegend = FALSE,
-         yaxis2 = list(
-           scaleanchor = "x",
-           scaleratio = 0.2,
-           domain = c(0.55,1))) %>% 
+ggplotly(p, tooltip = "text") %>%
+  layout(
+    showlegend = FALSE,
+    yaxis2 = list(
+      scaleanchor = "x",
+      scaleratio = 0.2,
+      domain = c(0.55, 1)
+    ),
+    dragmode = "zoom"
+  ) %>%
   add_annotations(
     x = 0.6125,
     y = -0.01,
@@ -162,6 +166,23 @@ ggplotly(p, tooltip = "text") %>%
     showarrow = F,
     bordercolor = "black",
     bgcolor = "grey80"
+  ) %>%
+  config(
+    displayModeBar = "static",
+    collaborate = F,
+    displaylogo = FALSE,
+    modeBarButtonsToRemove = list(
+      "sendDataToCloud",
+      "toImage",
+      "hoverClosestCartesian",
+      "hoverCompareCartesian",
+      "select2d",
+      "lasso2d",
+      "zoomIn2d",
+      "zoomOut2d",
+      "toggleSpikelines",
+      "pan2d"
+    )
   )
 
 })
