@@ -26,4 +26,4 @@ The report can be access at [https://banseljaj.shinyapps.io/covid19_drugs_list/]
 
 ## Development
 
-This report relies on access to the dataset available in the [COVID19 repository](https://github.com/AliSajid/Covid19). The R markdown relies on R Markdown.
+This report relies on access to the dataset available in the [COVID19 repository](https://github.com/AliSajid/Covid19). The R markdown file relies on R Markdown.
