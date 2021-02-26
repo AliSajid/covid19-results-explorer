@@ -12,7 +12,6 @@ bibliography: references.bib
 resource_files:
 - ganalytics.html
 - references.bib
-- ganalytics.html
 ---
 
 ```{r setup, include=FALSE}
